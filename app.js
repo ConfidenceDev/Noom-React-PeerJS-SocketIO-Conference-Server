@@ -13,7 +13,6 @@ const io = new Server(server, {
   },
 })
 const peerServer = ExpressPeerServer(server, {
-  path: "/",
   debug: true,
   allow_discovery: true,
 })
