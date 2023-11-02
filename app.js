@@ -45,8 +45,8 @@ io.on("connection", (socket) => {
       socket.broadcast.to(roomId).emit("mute-all", value)
     })
 
-    socket.on("username", (id, username) => {
-      socket.to(id).emit("username", username)
+    socket.on("userRecord", (id, data) => {
+      socket.to(id).emit("userRecord", data)
     })
 
     socket.on("room-board-on", (roomId, userId) => {
