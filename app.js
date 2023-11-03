@@ -80,6 +80,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("disconnect", () => {
+      socket.broadcast.to(roomId).emit("nom", numberOfMembers)
       socket.broadcast.to(roomId).emit("user-disconnected", userId)
     })
 
