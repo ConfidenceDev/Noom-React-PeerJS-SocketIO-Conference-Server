@@ -80,7 +80,8 @@ io.on("connection", (socket) => {
     })
 
     socket.on("disconnect", () => {
-      socket.broadcast.to(roomId).emit("nom", numberOfMembers)
+      const num = numberOfMembers - 1
+      socket.broadcast.to(roomId).emit("nom", num)
       socket.broadcast.to(roomId).emit("user-disconnected", userId)
     })
 
