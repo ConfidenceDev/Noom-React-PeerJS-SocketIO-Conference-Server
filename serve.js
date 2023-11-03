@@ -1,5 +1,5 @@
 const corsHeader = {
-  origin: ["*"],
+  origin: "*",
   methods: ["GET", "PUT", "POST", "DELETE"],
   allowedHeaders: [
     "Access-Control-Allow-Headers",
@@ -13,6 +13,6 @@ const corsHeader = {
   ],
   credentials: true,
   optionsSuccessStatus: 200,
-};
+}
 
-export { corsHeader };
+export { corsHeader }
