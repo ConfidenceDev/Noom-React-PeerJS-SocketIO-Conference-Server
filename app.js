@@ -41,12 +41,12 @@ io.on("connection", (socket) => {
     socket.broadcast.to(roomId).emit("user-connected", userId)
     io.to(roomId).emit("nom", numberOfMembers)
 
-    if (
+    /*if (
       roomPresentations[roomId] !== null &&
       roomPresentations[roomId] !== undefined
     ) {
       socket.emit("room-board-on", roomPresentations[roomId])
-    }
+    }*/
 
     socket.on("mute-all", (value) => {
       socket.broadcast.to(roomId).emit("mute-all", value)
