@@ -41,12 +41,18 @@ io.on("connection", (socket) => {
     socket.broadcast.to(roomId).emit("user-connected", userId)
     io.to(roomId).emit("nom", numberOfMembers)
 
-    /*if (
-      roomPresentations[roomId] !== null &&
-      roomPresentations[roomId] !== undefined
-    ) {
-      socket.emit("room-board-on", roomPresentations[roomId])
-    }*/
+    socket.on("check-presentation", () => {
+      if (
+        roomPresentations[roomId] !== null &&
+        roomPresentations[roomId] !== undefined
+      ) {
+        socket.emit("room-board-on", roomPresentations[roomId])
+      }
+    })
+
+    socket.on("kick", (id) => {
+      socket.to(id).emit("kicked")
+    })
 
     socket.on("mute-all", (value) => {
       socket.broadcast.to(roomId).emit("mute-all", value)
@@ -56,7 +62,7 @@ io.on("connection", (socket) => {
       socket.broadcast.to(roomId).emit("mute-me", value)
     })
 
-    socket.on("userRecord", (id, data) => {
+    socket.on("user-record", (id, data) => {
       socket.to(id).emit("userRecord", data)
     })
 
