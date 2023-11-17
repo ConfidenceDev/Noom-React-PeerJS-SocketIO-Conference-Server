@@ -51,7 +51,6 @@ io.on("connection", (socket) => {
     })
 
     socket.on("kick", (id) => {
-      console.log("KICK: ", id)
       socket.to(id).emit("kicked", id)
     })
 
