@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
 let roomPresentations = {}
 
 io.on("connection", (socket) => {
-  console.log("New User: " + socket.id)
+  //console.log("New User: " + socket.id)
 
   socket.on("join-room", (roomId, userId) => {
     socket.join(roomId)
@@ -51,7 +51,8 @@ io.on("connection", (socket) => {
     })
 
     socket.on("kick", (id) => {
-      socket.to(id).emit("kicked")
+      console.log("KICK: ", id)
+      socket.to(id).emit("kicked", id)
     })
 
     socket.on("mute-all", (value) => {
