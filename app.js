@@ -73,9 +73,15 @@ io.on("connection", (socket) => {
         .emit("room-board-on", roomPresentations[roomId])
     })
 
+    const closeBoard = (roomId, userId) => {
+      if (roomPresentations[roomId] === userId) {
+        roomPresentations[roomId] = null
+        socket.broadcast.to(roomId).emit("room-board-off", userId)
+      }
+    }
+
     socket.on("room-board-off", (roomId, userId) => {
-      if (roomPresentations[roomId] === userId) roomPresentations[roomId] = null
-      socket.broadcast.to(roomId).emit("room-board-off", userId)
+      closeBoard(roomId, userId)
     })
 
     socket.on("message", (data) => {
@@ -100,6 +106,7 @@ io.on("connection", (socket) => {
       const num = numberOfMembers > 1 ? numberOfMembers - 1 : numberOfMembers
       socket.broadcast.to(roomId).emit("nom", num)
       socket.broadcast.to(roomId).emit("user-disconnected", userId)
+      closeBoard(roomId, userId)
     })
 
     socket.on("share", () => {
