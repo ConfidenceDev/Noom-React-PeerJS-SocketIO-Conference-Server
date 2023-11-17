@@ -63,7 +63,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("user-record", (id, data) => {
-      socket.to(id).emit("userRecord", data)
+      socket.to(id).emit("user-record", data)
     })
 
     socket.on("room-board-on", (roomId, userId) => {
