@@ -51,7 +51,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("kick", (id) => {
-      io.to(id).emit("kick", id)
+      socket.broadcast.to(roomId).emit("kick", id)
     })
 
     socket.on("mute-all", (value) => {
