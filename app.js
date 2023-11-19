@@ -51,7 +51,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("kick", (id) => {
-      socket.to(id).emit("kicked", id)
+      io.to(id).emit("kicked", id)
     })
 
     socket.on("mute-all", (value) => {
@@ -63,7 +63,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("user-record", (id, data) => {
-      socket.to(id).emit("user-record", data)
+      io.to(id).emit("user-record", data)
     })
 
     socket.on("room-board-on", (roomId, userId) => {
