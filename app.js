@@ -31,6 +31,8 @@ let roomPresentations = {}
 
 io.on("connection", (socket) => {
   //console.log("New User: " + socket.id)
+  //const recordId = socket.handshake.query.recordId
+  //socket.id = recordId
 
   socket.on("join-room", (roomId, userId) => {
     socket.join(roomId)
@@ -60,6 +62,10 @@ io.on("connection", (socket) => {
 
     socket.on("mute-me", (value) => {
       socket.broadcast.to(roomId).emit("mute-me", value)
+    })
+
+    socket.on("hide-me", (value) => {
+      socket.broadcast.to(roomId).emit("hide-me", value)
     })
 
     socket.on("user-record", (id, data) => {
