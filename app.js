@@ -33,7 +33,7 @@ io.on("connection", (socket) => {
   //console.log("New User: " + socket.id)
   //const recordId = socket.handshake.query.recordId
   //socket.id = recordId
-  //Run 1
+  //Run 2
 
   socket.on("join-room", (roomId, userId) => {
     socket.join(roomId)
