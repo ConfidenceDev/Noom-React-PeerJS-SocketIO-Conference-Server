@@ -51,7 +51,7 @@ io.on("connection", (socket) => {
       } else {
         io.to(roomId).emit("timer", duration--)
       }
-    }, 1000)
+    }, 2000)
 
     socket.on("check-presentation", () => {
       if (
