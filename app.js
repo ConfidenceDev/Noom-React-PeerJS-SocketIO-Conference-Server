@@ -28,7 +28,6 @@ app.get("/", (req, res) => {
 })
 
 let roomPresentations = {}
-let duration = 7200 // 2hrs
 
 io.on("connection", (socket) => {
   //console.log("New User: " + socket.id)
@@ -44,6 +43,7 @@ io.on("connection", (socket) => {
 
     socket.broadcast.to(roomId).emit("user-connected", userId)
     io.to(roomId).emit("nom", numberOfMembers)
+    let duration = 7200 // 2hrs
 
     const timerInterval = setInterval(() => {
       if (duration <= 0) {
