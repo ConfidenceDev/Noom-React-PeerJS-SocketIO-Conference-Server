@@ -4,6 +4,7 @@ import { ExpressPeerServer } from "peer"
 import cors from "cors"
 import { corsHeader } from "./serve.js"
 import { Server } from "socket.io"
+import { Worker } from "node:worker_threads"
 
 const app = express()
 const server = http.createServer(app)
@@ -37,21 +38,30 @@ io.on("connection", (socket) => {
 
   socket.on("join-room", (roomId, userId) => {
     socket.join(roomId)
-
+    const worker = new Worker("./worker.js")
     const room = io.sockets.adapter.rooms.get(roomId)
     const numberOfMembers = room ? room.size : 0
 
     socket.broadcast.to(roomId).emit("user-connected", userId)
     io.to(roomId).emit("nom", numberOfMembers)
-    let duration = 7200 // 2hrs
+    //let duration = 7200 // 2hrs
 
-    const timerInterval = setInterval(() => {
+    /*const timerInterval = setInterval(() => {
       if (duration <= 0) {
         clearInterval(timerInterval)
+        io.to(roomId).emit("timer", -1)
       } else {
         io.to(roomId).emit("timer", duration--)
       }
-    }, 1000)
+    }, 1000)*/
+
+    worker.on("message", (duration) => {
+      if (duration <= 0) {
+        io.to(roomId).emit("timer", -1)
+      } else {
+        io.to(roomId).emit("timer", duration)
+      }
+    })
 
     socket.on("check-presentation", () => {
       if (
