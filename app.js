@@ -29,6 +29,7 @@ app.get("/", (req, res) => {
 })
 
 let roomPresentations = {}
+const connectedUsers = new Map()
 
 io.on("connection", (socket) => {
   //console.log("New User: " + socket.id)
@@ -36,13 +37,20 @@ io.on("connection", (socket) => {
   //socket.id = recordId
   //Run 2
 
-  socket.on("join-room", (roomId, userId) => {
+  socket.on("join-room", (roomId, userId, duration) => {
     socket.join(roomId)
     const worker = new Worker("./worker.js")
     const room = io.sockets.adapter.rooms.get(roomId)
     const numberOfMembers = room ? room.size : 0
 
-    socket.broadcast.to(roomId).emit("user-connected", userId)
+    if (connectedUsers.has(userId)) {
+      socket.emit("occupied", true)
+      return
+    }
+
+    socket.emit("occupied", false)
+    connectedUsers.set(userId, socket.id)
+    socket.broadcast.to(roomId).emit("user-connected", socket.id)
     io.to(roomId).emit("nom", numberOfMembers)
     //let duration = 7200 // 2hrs
 
@@ -54,13 +62,16 @@ io.on("connection", (socket) => {
         io.to(roomId).emit("timer", duration--)
       }
     }, 1000)*/
-
+    duration = parseInt(duration) <= 0 ? 7200 : parseInt(duration)
+    worker.postMessage(duration)
     worker.on("message", (duration) => {
       if (duration <= 0) {
         io.to(roomId).emit("timer", -1)
       } else {
         io.to(roomId).emit("timer", duration)
       }
+
+      console.log(duration)
     })
 
     socket.on("check-presentation", () => {
@@ -115,7 +126,7 @@ io.on("connection", (socket) => {
         msg: data.msg,
         username: data.username,
         img: data.img,
-        userId: userId,
+        userId: socket.id,
         date: new Date().toLocaleDateString("en-us", {
           year: "numeric",
           month: "short",
@@ -131,8 +142,14 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
       const num = numberOfMembers > 1 ? numberOfMembers - 1 : numberOfMembers
       socket.broadcast.to(roomId).emit("nom", num)
-      socket.broadcast.to(roomId).emit("user-disconnected", userId)
+      socket.broadcast.to(roomId).emit("user-disconnected", socket.id)
       closeBoard(roomId, userId)
+
+      for (let [key, id] of connectedUsers.entries()) {
+        if (id === socket.id) {
+          connectedUsers.delete(key)
+        }
+      }
     })
 
     socket.on("share", () => {
