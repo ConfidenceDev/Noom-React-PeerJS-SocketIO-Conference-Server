@@ -30,26 +30,52 @@ app.get("/", (req, res) => {
 
 let roomPresentations = {}
 const connectedUsers = new Map()
+const roomDurations = new Map()
 
 io.on("connection", (socket) => {
   //console.log("New User: " + socket.id)
   //const recordId = socket.handshake.query.recordId
   //socket.id = recordId
-  //Run 2
 
-  socket.on("join-room", (roomId, userId, duration) => {
-    socket.join(roomId)
-    const worker = new Worker("./worker.js")
-    const room = io.sockets.adapter.rooms.get(roomId)
-    const numberOfMembers = room ? room.size : 0
+  socket.on("start", (userId, instructorId) => {
+    //console.log(userId, instructorId)
+    if (userId === instructorId && connectedUsers.has(userId)) {
+      socket.emit("occupied", true, "Someone has joined as instructor already")
+      return
+    }
+
+    if (userId === instructorId && !connectedUsers.has(userId)) {
+      socket.emit("occupied", false)
+      connectedUsers.set(userId, socket.id)
+      return
+    }
+
+    if (!connectedUsers.has(instructorId)) {
+      socket.emit(
+        "occupied",
+        true,
+        "Please wait for instructor to join the meeting!"
+      )
+      return
+    }
 
     if (connectedUsers.has(userId)) {
-      socket.emit("occupied", true)
-      return
+      socket.emit("occupied", true, "A User with this ID already exists")
+      returnuserId
     }
 
     socket.emit("occupied", false)
     connectedUsers.set(userId, socket.id)
+  })
+
+  socket.on("join-room", (roomId, userId, duration) => {
+    socket.join(roomId)
+    connectedUsers.set(userId, socket.id)
+
+    const worker = new Worker("./worker.js")
+    const room = io.sockets.adapter.rooms.get(roomId)
+    const numberOfMembers = room ? room.size : 0
+
     socket.broadcast.to(roomId).emit("user-connected", socket.id)
     io.to(roomId).emit("nom", numberOfMembers)
     //let duration = 7200 // 2hrs
@@ -63,9 +89,14 @@ io.on("connection", (socket) => {
       }
     }, 1000)*/
     duration = parseInt(duration) <= 0 ? 7200 : parseInt(duration)
-    worker.postMessage(duration)
+    if (!roomDurations.has(roomId)) {
+      worker.postMessage(duration)
+      roomDurations.set(roomId, duration)
+    }
+
     worker.on("message", (duration) => {
       if (duration <= 0) {
+        roomDurations.delete(roomId)
         io.to(roomId).emit("timer", -1)
       } else {
         io.to(roomId).emit("timer", duration)
