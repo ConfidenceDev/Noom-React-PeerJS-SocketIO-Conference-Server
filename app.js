@@ -101,8 +101,6 @@ io.on("connection", (socket) => {
       } else {
         io.to(roomId).emit("timer", duration)
       }
-
-      console.log(duration)
     })
 
     socket.on("check-presentation", () => {
