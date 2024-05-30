@@ -38,7 +38,6 @@ io.on("connection", (socket) => {
   //socket.id = recordId
 
   socket.on("start", (userId, instructorId) => {
-    //console.log(userId, instructorId)
     if (userId === instructorId && connectedUsers.has(userId)) {
       socket.emit("occupied", true, "Someone has joined as instructor already")
       return
