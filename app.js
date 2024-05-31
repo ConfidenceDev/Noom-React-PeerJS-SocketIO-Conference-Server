@@ -78,7 +78,6 @@ io.on("connection", (socket) => {
     socket.broadcast.to(roomId).emit("user-connected", socket.id)
     io.to(roomId).emit("nom", numberOfMembers)
     //let duration = 7200 // 2hrs
-
     /*const timerInterval = setInterval(() => {
       if (duration <= 0) {
         clearInterval(timerInterval)
@@ -87,6 +86,7 @@ io.on("connection", (socket) => {
         io.to(roomId).emit("timer", duration--)
       }
     }, 1000)*/
+
     duration = parseInt(duration) <= 0 ? 7200 : parseInt(duration)
     if (!roomDurations.has(roomId)) {
       worker.postMessage(duration)
