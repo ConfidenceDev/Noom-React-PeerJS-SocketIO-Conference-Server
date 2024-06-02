@@ -31,6 +31,7 @@ app.get("/", (req, res) => {
 let roomPresentations = {}
 const connectedUsers = new Map()
 const roomDurations = new Map()
+const kickedUsers = new Map()
 
 io.on("connection", (socket) => {
   //console.log("New User: " + socket.id)
@@ -61,6 +62,15 @@ io.on("connection", (socket) => {
     if (connectedUsers.has(userId)) {
       socket.emit("occupied", true, "A User with this ID already exists")
       returnuserId
+    }
+
+    if (kickedUsers.has(userId)) {
+      socket.emit(
+        "occupied",
+        true,
+        "You've been restricted from joining this meeting!"
+      )
+      return
     }
 
     socket.emit("occupied", false)
@@ -96,6 +106,11 @@ io.on("connection", (socket) => {
     worker.on("message", (duration) => {
       if (duration <= 0) {
         roomDurations.delete(roomId)
+        for (let [key, id] of kickedUsers.entries()) {
+          if (id === roomId) {
+            kickedUsers.delete(key)
+          }
+        }
         io.to(roomId).emit("timer", -1)
       } else {
         io.to(roomId).emit("timer", duration)
@@ -111,8 +126,13 @@ io.on("connection", (socket) => {
       }
     })
 
-    socket.on("kick", (id) => {
-      socket.broadcast.to(roomId).emit("kick", id)
+    socket.on("kick", (userId) => {
+      for (let [key, id] of connectedUsers.entries()) {
+        if (id === userId) {
+          kickedUsers.set(key, roomId)
+        }
+      }
+      socket.broadcast.to(roomId).emit("kick", userId)
     })
 
     socket.on("mute-all", (value) => {
