@@ -19,6 +19,25 @@ const peerServer = ExpressPeerServer(server, {
 })
 const PORT = process.env.PORT || 443
 
+/*const tDate = new Date().toLocaleDateString("en-us", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+})
+
+const tUDate = new Date().toLocaleDateString("en-us", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  timeZone: "UTC",
+})
+
+console.log(tDate, " | ", tUDate)*/
+
 app.use(cors(corsHeader))
 app.use("/peerjs", peerServer)
 app.use(express.json())
@@ -181,6 +200,7 @@ io.on("connection", (socket) => {
           day: "numeric",
           hour: "numeric",
           minute: "numeric",
+          timeZone: "UTC",
         }),
         utc: Date.now(),
       }
