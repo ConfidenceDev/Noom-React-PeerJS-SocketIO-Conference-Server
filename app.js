@@ -19,24 +19,7 @@ const peerServer = ExpressPeerServer(server, {
 })
 const PORT = process.env.PORT || 443
 
-/*const tDate = new Date().toLocaleDateString("en-us", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  minute: "numeric",
-})
-
-const tUDate = new Date().toLocaleDateString("en-us", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  minute: "numeric",
-  timeZone: "UTC",
-})
-
-console.log(tDate, " | ", tUDate)*/
+//console.log(Date.now())
 
 app.use(cors(corsHeader))
 app.use("/peerjs", peerServer)
@@ -57,7 +40,33 @@ io.on("connection", (socket) => {
   //const recordId = socket.handshake.query.recordId
   //socket.id = recordId
 
-  socket.on("start", (userId, instructorId) => {
+  socket.on("start", (userId, instructorId, time) => {
+    if (Date.now() < parseInt(time)) {
+      const tUDate = Date.now()
+      //const old = 1718017835476 + 6 * 60 * 1000
+
+      const diffInMilliseconds = time - tUDate
+
+      // Convert the difference to hours, minutes, and seconds
+      const diffInSeconds = Math.floor(diffInMilliseconds / 1000)
+      const hours =
+        Math.floor(diffInSeconds / 3600) <= 0
+          ? 0
+          : Math.floor(diffInSeconds / 3600)
+      const minutes =
+        Math.floor((diffInSeconds % 3600) / 60) <= 0
+          ? 0
+          : Math.floor((diffInSeconds % 3600) / 60)
+      const seconds = diffInSeconds % 60 <= 0 ? 0 : diffInSeconds % 60
+
+      socket.emit(
+        "occupied",
+        true,
+        `Meeting would begin in ${hours}hrs ${minutes}mins ${seconds}secs`
+      )
+      return
+    }
+
     if (userId === instructorId && connectedUsers.has(userId)) {
       socket.emit("occupied", true, "Someone has joined as instructor already")
       return
@@ -69,14 +78,14 @@ io.on("connection", (socket) => {
       return
     }
 
-    if (!connectedUsers.has(instructorId)) {
+    /*if (!connectedUsers.has(instructorId)) {
       socket.emit(
         "occupied",
         true,
         "Please wait for instructor to join the meeting!"
       )
       return
-    }
+    }*/
 
     if (connectedUsers.has(userId)) {
       socket.emit("occupied", true, "A User with this ID already exists")
@@ -200,7 +209,9 @@ io.on("connection", (socket) => {
           day: "numeric",
           hour: "numeric",
           minute: "numeric",
-          timeZone: "UTC",
+          second: "numeric",
+          hour12: true,
+          timeZone: "Africa/Lagos",
         }),
         utc: Date.now(),
       }
