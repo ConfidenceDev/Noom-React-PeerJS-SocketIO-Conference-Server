@@ -5,6 +5,7 @@ import cors from "cors"
 import { corsHeader } from "./serve.js"
 import { Server } from "socket.io"
 import { Worker } from "node:worker_threads"
+import fetch from "node-fetch"
 
 const app = express()
 const server = http.createServer(app)
@@ -18,8 +19,6 @@ const peerServer = ExpressPeerServer(server, {
   allow_discovery: true,
 })
 const PORT = process.env.PORT || 443
-
-//console.log(Date.now())
 
 app.use(cors(corsHeader))
 app.use("/peerjs", peerServer)
@@ -40,25 +39,9 @@ io.on("connection", (socket) => {
   //const recordId = socket.handshake.query.recordId
   //socket.id = recordId
 
-  socket.on("start", (userId, instructorId, time) => {
-    if (Date.now() < parseInt(time)) {
-      const tUDate = Date.now()
-      //const old = 1718017835476 + 6 * 60 * 1000
-
-      const diffInMilliseconds = time - tUDate
-
-      // Convert the difference to hours, minutes, and seconds
-      const diffInSeconds = Math.floor(diffInMilliseconds / 1000)
-      const hours =
-        Math.floor(diffInSeconds / 3600) <= 0
-          ? 0
-          : Math.floor(diffInSeconds / 3600)
-      const minutes =
-        Math.floor((diffInSeconds % 3600) / 60) <= 0
-          ? 0
-          : Math.floor((diffInSeconds % 3600) / 60)
-      const seconds = diffInSeconds % 60 <= 0 ? 0 : diffInSeconds % 60
-
+  socket.on("start", (userId, instructorId, startDate, startTime) => {
+    const { hours, minutes, seconds } = calcTimeToMeeting(startDate, startTime)
+    if (hours > 0 || minutes > 0 || seconds > 0) {
       socket.emit(
         "occupied",
         true,
@@ -105,6 +88,41 @@ io.on("connection", (socket) => {
     connectedUsers.set(userId, socket.id)
   })
 
+  const calcTimeToMeeting = (startDate, startTime) => {
+    const now = new Date()
+    const utcYear = now.getUTCFullYear()
+    const utcMonth = String(now.getUTCMonth() + 1).padStart(2, "0") // getUTCMonth() returns 0-11
+    const utcDay = String(now.getUTCDate()).padStart(2, "0")
+    const utcHour = String(now.getUTCHours() + 1).padStart(2, "0")
+    const utcMinute = String(now.getUTCMinutes()).padStart(2, "0")
+    const utcSeconds = String(now.getUTCSeconds()).padStart(2, "0")
+
+    const myDate = `${utcYear}-${utcMonth}-${utcDay}`
+    const myTime = `${utcHour}:${utcMinute}:${utcSeconds}`
+
+    const bookedDateTimeString = `${startDate}T${startTime}`
+    const myDateTimeString = `${myDate}T${myTime}`
+
+    const bookedDateTime = new Date(bookedDateTimeString)
+    const myDateTime = new Date(myDateTimeString)
+
+    // Calculate the difference in milliseconds
+    const differenceInMilliseconds = bookedDateTime - myDateTime
+
+    // Convert the difference from milliseconds to hours, minutes, and seconds
+    const differenceInSeconds = Math.floor(differenceInMilliseconds / 1000)
+    const hours = Math.floor(differenceInSeconds / 3600)
+    const minutes = Math.floor((differenceInSeconds % 3600) / 60)
+    const seconds = differenceInSeconds % 60
+
+    const result = {
+      hours,
+      minutes,
+      seconds,
+    }
+    return result
+  }
+
   socket.on("join-room", (roomId, userId, duration) => {
     socket.join(roomId)
     connectedUsers.set(userId, socket.id)
@@ -139,11 +157,33 @@ io.on("connection", (socket) => {
             kickedUsers.delete(key)
           }
         }
+        const url = `https://decode-mnjh.onrender.com/api/admin/deleteMeeting/${roomId}`
+        const options = {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            //'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+          },
+        }
+        removeMeetingRecord(url, options)
         io.to(roomId).emit("timer", -1)
       } else {
         io.to(roomId).emit("timer", duration)
       }
     })
+
+    const removeMeetingRecord = async (url, options) => {
+      try {
+        const response = await fetch(url, options)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        //const data = await response.json();
+        //console.log('Meeting removed successfully:', data);
+      } catch (error) {
+        console.error("Error removing meeting record:", error)
+      }
+    }
 
     socket.on("check-presentation", () => {
       if (
