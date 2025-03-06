@@ -1,4 +1,12 @@
-const corsHeader = {
+import cors from "cors";
+
+/*origin: [
+  "https://www.nooms.onrender.com",
+  "https://nooms.onrender.com",
+  "nooms.onrender.com",
+],*/
+
+const corsObj = {
   origin: "*",
   methods: ["GET", "PUT", "POST", "DELETE"],
   allowedHeaders: [
@@ -13,6 +21,7 @@ const corsHeader = {
   ],
   credentials: true,
   optionsSuccessStatus: 200,
-}
+};
 
-export { corsHeader }
+export const corsHeader = corsObj;
+export const corsPayload = cors(corsObj);
